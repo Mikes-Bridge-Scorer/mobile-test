@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Bridge Navigator</title>
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 500px;
+            margin: 0 auto;
+            background: #2c3e50;
+        }
+
+        .display-panel {
+            background: #34495e;
+            border-radius: 12px;
+            margin: 10px;
+            padding: 15px;
+            min-height: 180px;
+            border: 2px solid #4a6741;
+        }
+
+        .title-score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .mode-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .score-display {
+            text-align: right;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+
+        .game-content {
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .code-display {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            margin: 15px 0;
+            letter-spacing: 4px;
+        }
+
+        .current-state {
+            font-size: 12px;
+            color: #bdc3c7;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            padding: 10px;
+            flex: 1;
+        }
+
+        .btn {
+            background: #3498db;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            min-height: 50px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+            background: #2980b9;
+        }
+
+        .btn.disabled {
+            background: #7f8c8d;
+            color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .btn.disabled:active {
+            transform: none;
+            background: #7f8c8d;
+        }
+
+        .btn-number {
+            background: #27ae60;
+        }
+
+        .btn-number:active {
+            background: #229954;
+        }
+
+        .btn-action {
+            background: #e74c3c;
+        }
+
+        .btn-action:active {
+            background: #c0392b;
+        }
+
+        .btn-special {
+            background: #f39c12;
+        }
+
+        .btn-special:active {
+            background: #d68910;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .control-btn {
+            background: #7f8c8d;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            touch-action: manipulation;
+            min-height: 36px;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .control-btn.active {
+            background: #27ae60;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #34495e;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+            color: white;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .modal-btn {
+            background: #3498db;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            touch-action: manipulation;
+            min-height: 44px;
+        }
+
+        .modal-btn:active {
+            transform: scale(0.95);
+        }
+
+        .modal-btn.close {
+            background: #95a5a6;
+        }
+
+        .error-message {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid #e74c3c;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            color: #e74c3c;
+            text-align: center;
+        }
+
+        .success-message {
+            background: rgba(39, 174, 96, 0.2);
+            border: 1px solid #27ae60;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            color: #27ae60;
+            text-align: center;
+        }
+
+        /* Grid layout for calculator buttons */
+        .btn:nth-child(1) { grid-column: 1; } /* 1 */
+        .btn:nth-child(2) { grid-column: 2; } /* 2 */
+        .btn:nth-child(3) { grid-column: 3; } /* 3 */
+        .btn:nth-child(4) { grid-column: 4; } /* 4 */
+        .btn:nth-child(5) { grid-column: 5; } /* 5 */
+
+        .btn:nth-child(6) { grid-column: 1; } /* 6 */
+        .btn:nth-child(7) { grid-column: 2; } /* 7 */
+        .btn:nth-child(8) { grid-column: 3; } /* 8 */
+        .btn:nth-child(9) { grid-column: 4; } /* 9 */
+        .btn:nth-child(10) { grid-column: 5; } /* 0 */
+
+        .btn:nth-child(11) { grid-column: 1; } /* ♣ */
+        .btn:nth-child(12) { grid-column: 2; } /* ♦ */
+        .btn:nth-child(13) { grid-column: 3; } /* ♥ */
+        .btn:nth-child(14) { grid-column: 4; } /* ♠ */
+        .btn:nth-child(15) { grid-column: 5; } /* NT */
+
+        .btn:nth-child(16) { grid-column: 1; } /* N */
+        .btn:nth-child(17) { grid-column: 2; } /* S */
+        .btn:nth-child(18) { grid-column: 3; } /* E */
+        .btn:nth-child(19) { grid-column: 4; } /* W */
+        .btn:nth-child(20) { grid-column: 5; } /* X/XX */
+
+        .btn:nth-child(21) { grid-column: 1; } /* Made */
+        .btn:nth-child(22) { grid-column: 2; } /* Plus */
+        .btn:nth-child(23) { grid-column: 3; } /* Down */
+        .btn:nth-child(24) { grid-column: 4; } /* Back */
+        .btn:nth-child(25) { grid-column: 5; } /* Deal */
+
+        @media (max-width: 480px) {
+            .calculator-grid {
+                gap: 6px;
+                padding: 8px;
+            }
+            
+            .btn {
+                min-height: 45px;
+                font-size: 14px;
+            }
+            
+            .code-display {
+                font-size: 20px;
+                letter-spacing: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="display-panel" id="display">
+            <div class="title-score-row">
+                <div class="mode-title">🔑 License Code</div>
+                <div class="score-display">Bridge<br>Navigator</div>
+            </div>
+            <div class="game-content">
+                <div class="code-display" id="codeDisplay">_ _ _ _ _ _</div>
+                <div id="statusMessage">Enter 6-digit license code</div>
+                <div class="current-state">Use number buttons. BACK to delete, DEAL to submit</div>
+            </div>
+        </div>
+
+        <div class="calculator-grid">
+            <button class="btn btn-number" data-value="1">1</button>
+            <button class="btn btn-number" data-value="2">2</button>
+            <button class="btn btn-number" data-value="3">3</button>
+            <button class="btn btn-number" data-value="4">4</button>
+            <button class="btn btn-number" data-value="5">5</button>
+
+            <button class="btn btn-number" data-value="6">6</button>
+            <button class="btn btn-number" data-value="7">7</button>
+            <button class="btn btn-number" data-value="8">8</button>
+            <button class="btn btn-number" data-value="9">9</button>
+            <button class="btn btn-number" data-value="0">0</button>
+
+            <button class="btn btn-special disabled" data-value="clubs">♣</button>
+            <button class="btn btn-special disabled" data-value="diamonds">♦</button>
+            <button class="btn btn-special disabled" data-value="hearts">♥</button>
+            <button class="btn btn-special disabled" data-value="spades">♠</button>
+            <button class="btn btn-special disabled" data-value="nt">NT</button>
+
+            <button class="btn btn-special disabled" data-value="n">N</button>
+            <button class="btn btn-special disabled" data-value="s">S</button>
+            <button class="btn btn-special disabled" data-value="e">E</button>
+            <button class="btn btn-special disabled" data-value="w">W</button>
+            <button class="btn btn-special disabled" data-value="double">X/XX</button>
+
+            <button class="btn btn-special disabled" data-value="made">Made</button>
+            <button class="btn btn-special disabled" data-value="plus">Plus</button>
+            <button class="btn btn-special disabled" data-value="down">Down</button>
+            <button class="btn btn-action" data-value="back">Back</button>
+            <button class="btn btn-action disabled" data-value="deal" id="dealBtn">Deal</button>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="wakeBtn">Wake</button>
+            <button class="control-btn disabled">NV</button>
+            <button class="control-btn" id="helpBtn">Help</button>
+            <button class="control-btn" id="quitBtn">Quit</button>
+        </div>
+    </div>
+
+    <script>
+        class SimpleBridgeApp {
+            constructor() {
+                this.enteredCode = '';
+                this.isLicensed = false;
+                this.init();
+            }
+
+            init() {
+                console.log('🎮 Initializing Simple Bridge App');
+                this.setupEventListeners();
+                this.updateDisplay();
+                
+                // Check if already licensed
+                const stored = localStorage.getItem('bridgeAppLicense');
+                if (stored) {
+                    try {
+                        const license = JSON.parse(stored);
+                        if (license && (license.type === 'FULL' || license.type === 'TRIAL')) {
+                            this.showLicensedMode();
+                            return;
+                        }
+                    } catch (e) {
+                        console.log('Invalid stored license');
+                    }
+                }
+            }
+
+            setupEventListeners() {
+                // Button click handlers
+                document.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.btn');
+                    if (btn && !btn.classList.contains('disabled')) {
+                        this.handleButtonClick(btn.dataset.value);
+                    }
+                });
+
+                // Touch handlers for mobile
+                document.addEventListener('touchend', (e) => {
+                    const btn = e.target.closest('.btn');
+                    if (btn && !btn.classList.contains('disabled')) {
+                        e.preventDefault();
+                        this.handleButtonClick(btn.dataset.value);
+                    }
+                }, { passive: false });
+
+                // Control buttons
+                document.getElementById('helpBtn').addEventListener('click', () => this.showHelp());
+                document.getElementById('quitBtn').addEventListener('click', () => this.showQuit());
+                
+                // Keyboard support
+                document.addEventListener('keydown', (e) => {
+                    if (e.key >= '0' && e.key <= '9') {
+                        this.handleButtonClick(e.key);
+                    } else if (e.key === 'Backspace') {
+                        this.handleButtonClick('back');
+                    } else if (e.key === 'Enter') {
+                        this.handleButtonClick('deal');
+                    }
+                });
+            }
+
+            handleButtonClick(value) {
+                console.log('Button clicked:', value);
+                
+                if (this.isLicensed) {
+                    this.showMessage('Licensed version - full app would load here', 'success');
+                    return;
+                }
+
+                if (value >= '0' && value <= '9') {
+                    if (this.enteredCode.length < 6) {
+                        this.enteredCode += value;
+                        this.updateDisplay();
+                    }
+                } else if (value === 'back') {
+                    if (this.enteredCode.length > 0) {
+                        this.enteredCode = this.enteredCode.slice(0, -1);
+                        this.updateDisplay();
+                    }
+                } else if (value === 'deal') {
+                    this.submitCode();
+                }
+            }
+
+            updateDisplay() {
+                const codeDisplay = document.getElementById('codeDisplay');
+                const dealBtn = document.getElementById('dealBtn');
+                
+                // Update code display
+                const displayCode = this.enteredCode.padEnd(6, '_').split('').join(' ');
+                codeDisplay.textContent = displayCode;
+                
+                // Enable/disable deal button
+                if (this.enteredCode.length === 6) {
+                    dealBtn.classList.remove('disabled');
+                } else {
+                    dealBtn.classList.add('disabled');
+                }
+            }
+
+            submitCode() {
+                if (this.enteredCode.length !== 6) {
+                    this.showMessage('Code must be 6 digits', 'error');
+                    return;
+                }
+
+                // Simple validation for testing
+                const digitSum = this.enteredCode.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+                const isTrialCode = this.enteredCode.startsWith('111') || 
+                                   this.enteredCode.startsWith('222') || 
+                                   this.enteredCode.startsWith('333');
+                
+                if (isTrialCode) {
+                    this.activateLicense('TRIAL');
+                } else if (digitSum === 37) {
+                    this.activateLicense('FULL');
+                } else {
+                    this.showMessage('Invalid license code. Please try again.', 'error');
+                    this.enteredCode = '';
+                    this.updateDisplay();
+                }
+            }
+
+            activateLicense(type) {
+                const licenseData = {
+                    code: this.enteredCode,
+                    type: type,
+                    activatedAt: Date.now()
+                };
+
+                localStorage.setItem('bridgeAppLicense', JSON.stringify(licenseData));
+                
+                const message = type === 'FULL' 
+                    ? 'Full version activated! 🎉' 
+                    : 'Trial activated! 14 days remaining. 🎉';
+                
+                this.showMessage(message, 'success');
+                
+                setTimeout(() => {
+                    this.showLicensedMode();
+                }, 2000);
+            }
+
+            showLicensedMode() {
+                this.isLicensed = true;
+                const display = document.getElementById('display');
+                
+                display.innerHTML = `
+                    <div class="title-score-row">
+                        <div class="mode-title">Bridge Navigator</div>
+                        <div class="score-display">NS: 0<br>EW: 0</div>
+                    </div>
+                    <div class="game-content">
+                        <div style="text-align: center;">
+                            <h3>✅ Licensed Version Active</h3>
+                            <p style="margin: 15px 0; color: #bdc3c7;">
+                                Select scoring mode:<br>
+                                1-Kitchen  2-Bonus  3-Chicago  4-Rubber  5-Duplicate
+                            </p>
+                            <div style="background: rgba(39, 174, 96, 0.2); padding: 10px; border-radius: 6px; margin: 10px 0;">
+                                This demo shows the license system working.<br>
+                                Your full app modules would load here.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="current-state">Press 1-5 to select mode (demo)</div>
+                `;
+
+                // Enable mode selection buttons
+                const numberButtons = document.querySelectorAll('[data-value="1"], [data-value="2"], [data-value="3"], [data-value="4"], [data-value="5"]');
+                numberButtons.forEach(btn => btn.classList.remove('disabled'));
+            }
+
+            showMessage(text, type = 'info') {
+                const statusMessage = document.getElementById('statusMessage');
+                if (statusMessage) {
+                    statusMessage.innerHTML = `<div class="${type}-message">${text}</div>`;
+                    
+                    if (type === 'error') {
+                        setTimeout(() => {
+                            statusMessage.innerHTML = 'Enter 6-digit license code';
+                        }, 3000);
+                    }
+                } else {
+                    // Fallback for when display changes
+                    alert(text);
+                }
+            }
+
+            showHelp() {
+                this.showModal('Help', `
+                    <h4>🔑 License Code Help</h4>
+                    <p style="margin: 10px 0;">
+                        <strong>How to enter license code:</strong><br>
+                        • Use number buttons 0-9<br>
+                        • BACK button deletes last digit<br>
+                        • DEAL button submits code
+                    </p>
+                    
+                    <h4>📧 Contact</h4>
+                    <p style="margin: 10px 0;">
+                        Email: <a href="mailto:mike.chris.smith@gmail.com" style="color: #3498db;">mike.chris.smith@gmail.com</a>
+                    </p>
+                    
+                    <h4>🧪 Test Codes</h4>
+                    <p style="margin: 10px 0; font-size: 12px; color: #bdc3c7;">
+                        Trial: 111000, 222000, 333000<br>
+                        Full: 730999 (digits sum to 37)
+                    </p>
+                `);
+            }
+
+            showQuit() {
+                this.showModal('Exit Options', `
+                    <p>What would you like to do?</p>
+                `, [
+                    { text: 'Clear License', action: () => this.clearLicense() },
+                    { text: 'Close App', action: () => this.closeApp() },
+                    { text: 'Cancel', action: null }
+                ]);
+            }
+
+            clearLicense() {
+                localStorage.removeItem('bridgeAppLicense');
+                location.reload();
+            }
+
+            closeApp() {
+                alert('Close this browser tab to exit Bridge Navigator');
+            }
+
+            showModal(title, content, buttons = null) {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                
+                const defaultButtons = [{ text: 'Close', action: null }];
+                const modalButtons = buttons || defaultButtons;
+                
+                let buttonsHTML = '';
+                modalButtons.forEach(btn => {
+                    buttonsHTML += `<button class="modal-btn ${btn.text === 'Close' || btn.text === 'Cancel' ? 'close' : ''}">${btn.text}</button>`;
+                });
+                
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3>${title}</h3>
+                        <div>${content}</div>
+                        <div class="modal-buttons">${buttonsHTML}</div>
+                    </div>
+                `;
+                
+                // Event handlers
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                        return;
+                    }
+                    
+                    const btn = e.target.closest('.modal-btn');
+                    if (btn) {
+                        const buttonConfig = modalButtons[Array.from(modal.querySelectorAll('.modal-btn')).indexOf(btn)];
+                        if (buttonConfig && buttonConfig.action) {
+                            buttonConfig.action();
+                        }
+                        modal.remove();
+                    }
+                });
+                
+                document.body.appendChild(modal);
+            }
+        }
+
+        // Initialize app when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.bridgeApp = new SimpleBridgeApp();
+        });
+
+        // Debug helpers
+        window.generateTrialCode = () => {
+            const prefixes = ['111', '222', '333'];
+            const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+            const suffix = Math.random().toString().slice(2, 5);
+            return prefix + suffix;
+        };
+
+        window.generateFullCode = () => {
+            // Generate a code that sums to 37
+            const digits = [7, 3, 0, 9, 9, 9]; // sums to 37
+            for (let i = digits.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [digits[i], digits[j]] = [digits[j], digits[i]];
+            }
+            return digits.join('');
+        };
+
+        console.log('🧪 Test codes:');
+        console.log('Trial:', window.generateTrialCode());
+        console.log('Full:', window.generateFullCode());
+    </script>
+</body>
+</html>

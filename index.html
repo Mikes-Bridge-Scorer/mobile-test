@@ -90,6 +90,7 @@
             gap: 8px;
             padding: 10px;
             flex: 1;
+            overflow-y: auto;
         }
 
         .btn {
@@ -293,6 +294,29 @@
             .code-display {
                 font-size: 20px;
                 letter-spacing: 3px;
+            }
+            
+            .display-panel {
+                min-height: 120px;
+                margin: 5px;
+                padding: 10px;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .display-panel {
+                min-height: 100px;
+                padding: 8px;
+            }
+            
+            .btn {
+                min-height: 40px;
+                font-size: 13px;
+            }
+            
+            .calculator-grid {
+                gap: 4px;
+                padding: 5px;
             }
         }
     </style>
